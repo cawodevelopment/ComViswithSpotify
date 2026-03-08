@@ -1,8 +1,10 @@
 import cv2 as cv
 import HandTrackingModule as htm
-import numpy
+import numpy as np
+import math
 import spotipy as sp
 from spotipy.oauth2 import SpotifyOAuth
+from pycaw.pycaw import AudioUtilities
 import os
 from dotenv import load_dotenv
 
@@ -26,6 +28,14 @@ capture.set(4, camHeight)
 
 detector = htm.HandDetector(max_num_hands=1)
 current_zone = None
+
+device = AudioUtilities.GetSpeakers()
+volume = device.EndpointVolume
+
+volumeRange = volume.GetVolumeRange()
+
+minVol = volumeRange[0]
+maxVol = volumeRange[1]
 
 while True:
     ret, frame = capture.read()
@@ -69,13 +79,34 @@ while True:
 
     current_zone = zone
 
+    if lmList and len(lmList) > 8:
+        fingers = detector.fingersUp()
+        
+        if fingers[4] == 1:
+            x1, y1 = lmList[4][1], lmList[4][2]
+            x2, y2 = lmList[8][1], lmList[8][2]
+
+            cv.circle(flipped_frame, (lmList[4][1], lmList[4][2]), 15, (255, 0, 255), cv.FILLED)
+            cv.circle(flipped_frame, (lmList[8][1], lmList[8][2]), 15, (255, 0, 255), cv.FILLED)
+            cv.line(flipped_frame, (x1, y1), (x2, y2), (255, 0, 255), 3)
+
+            length = math.hypot(x2-x1, y2-y1)
+
+            vol = np.interp(length, [20, 220], [minVol, maxVol])
+            volume.SetMasterVolumeLevel(vol, None)
+
     cv.rectangle(flipped_frame, (green_x1, 0), (green_x2, camHeight), (0, 255, 0), 2)
+    cv.putText(flipped_frame, "Next", (green_x1 + 10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    
     cv.rectangle(flipped_frame, (red_x1, 0), (red_x2, camHeight), (0, 0, 255), 2)
+    cv.putText(flipped_frame, "Prev", (red_x1 + 10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+    
     cv.rectangle(flipped_frame, (blue_x1, blue_y1), (blue_x2, blue_y2), (255, 0, 0), 2)
+    cv.putText(flipped_frame, "Pause/Play", (blue_x1 + 10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
 
     cv.imshow("Webcam", flipped_frame)
 
-    if cv.waitKey(20) & 0xFF == ord('d') or not ret:
+    if cv.waitKey(20) & 0xFF == ord('d'):
         break
 
 capture.release()
