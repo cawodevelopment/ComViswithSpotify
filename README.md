@@ -1,25 +1,57 @@
-Overview:
+# ComVis with Spotify
 
-  This project uses Computer Vision to handle Spotify controls, including:
-    -Next Track
-    -Previous Track
-    -Pause/Play, 
-  as well as adjusting volume.
+Hand-tracking Spotify controller built with OpenCV, MediaPipe, Spotipy, and Pycaw. The app uses your webcam to detect hand gestures and map them to Spotify playback controls and system volume changes.
 
-  This project assumes you have Spotify premium.
+## Features
 
-Config Instructions:
+- Next track by moving your index finger into the green zone on the right
+- Previous track by moving your index finger into the red zone on the left
+- Pause or resume playback by moving your index finger into the blue zone at the top center
+- Control system volume by pinching your thumb and index finger together
 
-  1. Log in to Spotify Developer Dashboard
-  2. Create an app
-  3. Pull the code from the remote repos
-  4. Add a .env file and fill in the variables from .envtemplate with the variables from you app on the spoify developer dashboard
-  5. Run
-  6. Accept Auth
+## Requirements
 
-Interactions:
+- Windows
+- Python 3.12
+- A working webcam
+- A Spotify Premium account for playback control
+- Spotify developer credentials
 
-  Next Track - Place pointer finger alone in green box
-  Prev Track - Place pointer finger alone in red box
-  Pause/Play  - Place pointer finger alone in red box
-  Volume - Raise pinky finger, and adjust the length between index and thumb to control the volume
+## Installation
+
+1. Create and activate a virtual environment if you want to keep dependencies isolated.
+2. Install the project dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Create a `.env` file in the project root with your Spotify credentials:
+
+   ```env
+   SPOTIPY_CLIENT_ID=your_client_id
+   SPOTIPY_CLIENT_SECRET=your_client_secret
+   SPOTIPY_REDIRECT_URI=http://localhost:8888/callback
+   ```
+
+4. Make sure the redirect URI in your Spotify developer dashboard matches the value in `.env`.
+
+## Running
+
+Start the app with:
+
+```bash
+python SpotifyGestureControl.py
+```
+
+The webcam window opens automatically. Press `d` to quit.
+
+## How It Works
+
+The project uses `HandTrackingModule.py` to detect hand landmarks and read finger positions from the webcam frame. `SpotifyGestureControl.py` then checks the index fingertip location against colored screen zones and uses the Spotify Web API to switch tracks or toggle playback. When the thumb and index finger are held apart or brought together, the app maps that distance to the system master volume.
+
+## Notes
+
+- This project is tuned for a single detected hand.
+- Volume control relies on Pycaw and is intended for Windows.
+- If Spotify actions do not trigger, verify that your Spotify credentials, redirect URI, and playback device are set up correctly.
